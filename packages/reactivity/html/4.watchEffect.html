@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <h1>Vue</h1>
+        <div id="app"></div>
+        <script type="module">
+            // reactive 创建一个响应式对象
+            // effect 副作用函数 默认会执行一次， 数据变化后会再次执行
+            import {
+                reactive,
+                effect,
+                computed,
+                watch,
+                watchEffect,
+            } from "../dist/reactivity.esm.js";
+            // import {
+            //     reactive,
+            //     effect,
+            // } from "/node_modules/@vue/reactivity/dist/reactivity.esm-browser.js";
+
+            const state = reactive({
+                flag: false,
+                name: "zs",
+                age: 19,
+                o: {
+                    o_i: {
+                        str: "hello",
+                    },
+                },
+            });
+
+            const app = document.getElementById("app");
+
+            // effect
+            // watch和watchEffect都是基于effect
+            // 默认watchEffect会立刻执行， 会让用到的响应式数据，收集当前的effect，数据变化后再次执行回调
+            watchEffect(() => {
+                app.innerHTML = `<h1>${state.name}</h1>`;
+            });
+
+            setTimeout(() => {
+                state.name = "ls";
+            }, 2000);
+        </script>
+    </body>
+</html>

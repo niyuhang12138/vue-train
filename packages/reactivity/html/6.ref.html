@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <button id="increment">Increment</button>
+        <div id="count"></div>
+        <script type="module">
+            import { ref, watchEffect } from "../dist/reactivity.esm.js";
+            console.log(ref);
+
+            // 一般情况下ref 用户处理基本类型， 还是就是用户更改整个对象的时候采用
+            // 对象类型一般我们采用 reactive来处理
+            const count = ref(0);
+
+            const incrementContainer = document.getElementById("increment");
+            const countContainer = document.getElementById("count");
+
+            watchEffect(() => {
+                countContainer.innerText = count.value;
+            });
+
+            incrementContainer.addEventListener("click", () => {
+                count.value++;
+            });
+        </script>
+    </body>
+</html>

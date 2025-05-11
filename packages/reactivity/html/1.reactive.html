@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <h1>Vue</h1>
+        <div id="app"></div>
+        <script type="module">
+            // reactive 创建一个响应式对象
+            // effect 副作用函数 默认会执行一次， 数据变化后会再次执行
+            import { reactive, effect } from "../dist/reactivity.esm.js";
+            // import {
+            //     reactive,
+            //     effect,
+            // } from "/node_modules/@vue/reactivity/dist/reactivity.esm-browser.js";
+
+            const state = reactive({
+                flag: false,
+                name: "zs",
+                age: 19,
+                o: {
+                    o_i: {
+                        str: "hello",
+                    },
+                },
+            });
+
+            console.log(state);
+
+            const app = document.getElementById("app");
+
+            const runner = effect(
+                () => {
+                    console.log("runner");
+                    // app.innerText = state.flag ? state.name : state.age;
+                    app.innerText = state.o.o_i.str;
+                },
+                {
+                    scheduler: () => {
+                        // 组件更新都是基于这个scheduler来实现的
+                        console.log("scheduler");
+                        setTimeout(() => {
+                            runner();
+                        }, 1000);
+                    },
+                }
+            );
+            // 默认第一次flag会收集effect age会收集当前的effect
+            // 清理操作：默认第一次flag会收集effect name收集了我们的effect 应该将age收集的依赖移除掉，否则更改age还是会触发更新
+
+            // runner.effect.stop();
+
+            setTimeout(() => {
+                state.o.o_i.str = "world";
+
+                // runner();
+
+                // state.flag = !state.flag;
+
+                // setTimeout(() => {
+                //     console.log("修改了age");
+                //     state.age = Math.random();
+                // });
+            }, 2000);
+        </script>
+    </body>
+</html>

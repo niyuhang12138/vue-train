@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script type="module">
+            import {
+                reactive,
+                effectScope,
+                watchEffect,
+            } from "../dist/reactivity.esm.js";
+
+            // 状态管理工具 pinia 我在组件中用了一对响应式数据 计算属性watch...
+            const scope = effectScope();
+            scope.run(() => {
+                const state = reactive({
+                    name: "zs",
+                    age: 19,
+                });
+
+                watchEffect(() => {
+                    console.log("watchEffect 1: ", state.age);
+                });
+
+                setInterval(() => {
+                    state.age++;
+                }, 1000);
+
+                const scope = effectScope(true);
+
+                scope.run(() => {
+                    const state = reactive({
+                        name: "ls",
+                        age: 20,
+                    });
+
+                    watchEffect(() => {
+                        console.log("watchEffect 2: ", state.age);
+                    });
+
+                    setInterval(() => {
+                        state.age++;
+                    }, 1000);
+                });
+            });
+
+            setTimeout(() => {
+                scope.stop();
+            }, 5000);
+        </script>
+    </body>
+</html>

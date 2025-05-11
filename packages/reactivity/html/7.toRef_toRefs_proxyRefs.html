@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <div id="reactive"></div>
+        <div id="name"></div>
+        <div id="age"></div>
+        <script type="module">
+            import {
+                reactive,
+                toRef,
+                watchEffect,
+                toRefs,
+                proxyRefs,
+            } from "../dist/reactivity.esm.js";
+
+            const reactiveContainer = document.getElementById("reactive");
+            const nameContainer = document.getElementById("name");
+            const ageContainer = document.getElementById("age");
+
+            const person = reactive({ name: "zs", age: 19 });
+
+            // toRef: 只会代理对象的属性
+            // const name = toRef(person, "name");
+            // const age = toRef(person, "age");
+
+            // toRefs: 代理对象的所有属性
+            const personRefs = toRefs(person);
+
+            watchEffect(() => {
+                reactiveContainer.innerText = JSON.stringify(person);
+            });
+
+            watchEffect(() => {
+                let { name, age } = proxyRefs(personRefs);
+                nameContainer.innerText = name;
+                ageContainer.innerText = age;
+            });
+
+            setTimeout(() => {
+                let p = proxyRefs(personRefs);
+                p.name = "ls";
+                p.age = 20;
+            }, 2000);
+        </script>
+    </body>
+</html>

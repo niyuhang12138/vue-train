@@ -1,10 +1,10 @@
 {
-    "name": "@vue/reactivity",
+    "name": "@vue/runtime-core",
     "version": "1.0.0",
-    "module": "dist/reactivity.esm-bundler.js",
-    "unpkg": "dist/reactivity.global.js",
+    "module": "dist/runtime-core.esm-bundler.js",
+    "unpkg": "dist/runtime-core.global.js",
     "buildOptions": {
-        "name": "VueReactivity",
+        "name": "VueRuntimeCore",
         "formats": [
             "esm-bundler",
             "cjs",

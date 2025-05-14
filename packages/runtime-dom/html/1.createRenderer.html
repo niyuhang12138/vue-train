@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <h1>runtime-dom</h1>
+        <div id="app"></div>
+        <script type="module">
+            // import {
+            //     createRenderer,
+            //     h,
+            //     // render, 已经提供好的
+            // } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js";
+
+            // h => createElement
+            // console.log(
+            //     h(
+            //         "div",
+            //         {
+            //             style: { color: "red" },
+            //         },
+            //         "hello world"
+            //     )
+            // );
+
+            // const app = document.getElementById("app");
+            // // runtime-dom 提供浏览器的api操作方法
+            // // runtime-core 只是虚拟dom， 会调用上层runtime-dom提供的方法
+            // const { render } = createRenderer({
+            //     createElement(tagName) {
+            //         return document.createElement(tagName);
+            //     },
+            //     setElementText(el, text) {
+            //         el.textContent = text;
+            //     },
+            //     insert(el, container) {
+            //         container.appendChild(el);
+            //     },
+            // });
+            // render(
+            //     h(
+            //         "div",
+            //         {
+            //             // style: { color: "red" },
+            //         },
+            //         "hello world"
+            //     ),
+            //     app
+            // );
+
+            import { h, render } from "../dist/runtime-dom.esm.js";
+            const app = document.getElementById("app");
+            // render(h("div", "hello world"), app);
+
+            // setTimeout(() => {
+            //     render(null, app);
+            // }, 2000);
+
+            // setTimeout(() => {
+            //     render(
+            //         h("div", {
+            //             style: {
+            //                 color: "red",
+            //                 background: "blue",
+            //             },
+            //         }),
+            //         app
+            //     );
+            // }, 2000);
+
+            // 文本 -> 文本
+            // render(h("div", "hello"), app);
+            // setTimeout(() => {
+            //     render(h("div", "world"), app);
+            // }, 2000);
+
+            // 文本 -> 数组
+            // render(h("div", "hello"), app);
+            // setTimeout(() => {
+            //     render(h("div", [h("span", 1), h("span", 2)]), app);
+            // }, 2000);
+
+            // 文本 -> null
+            // render(h("div", "hello"), app);
+            // setTimeout(() => {
+            //     render(h("div"), app);
+            // }, 2000);
+
+            // 数组 -> 文本
+            // render(h("div", [h("span", 1), h("span", 2)]), app);
+            // setTimeout(() => {
+            //     render(h("div", "hello"), app);
+            // }, 2000);
+
+            // 数组 -> 数组
+            // render(h("div", [h("span", 1), h("span", 2)]), app);
+            // setTimeout(() => {
+            //     render(h("div", [h("span", 3), h("span", 4)]), app);
+            // }, 2000);
+
+            // 数组 -> null
+            // render(h("div", [h("span", 1), h("span", 2)]), app);
+            // setTimeout(() => {
+            //     render(h("div"), app);
+            // }, 2000);
+
+            // null -> 文本
+            // render(h("div"), app);
+            // setTimeout(() => {
+            //     render(h("div", "hello"), app);
+            // }, 2000);
+
+            // null -> 数组
+            // render(h("div"), app);
+            // setTimeout(() => {
+            //     render(h("div", [h("span", 1), h("span", 2)]), app);
+            // }, 2000);
+
+            // null -> null
+            // render(h("div"), app);
+            // setTimeout(() => {
+            //     render(h("p"), app);
+            // }, 2000);
+        </script>
+    </body>
+</html>

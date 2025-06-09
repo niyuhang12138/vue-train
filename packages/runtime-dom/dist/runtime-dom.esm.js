@@ -256,14 +256,71 @@ var BaseTransitionImpl = {
 // packages/runtime-core/src/components/KeepAlive.ts
 var KeepAlive = {
   __isKeepAlive: true,
+  props: {
+    max: Number
+  },
   setup(props, { slots }) {
+    const { max } = props;
     const keys = /* @__PURE__ */ new Set();
     const cache = /* @__PURE__ */ new Map();
+    function reset(vnode) {
+      let shapeFlag = vnode.shapeFlag;
+      if (shapeFlag & 512 /* COMPONENT_KEPT_ALIVE */) {
+        shapeFlag -= 512 /* COMPONENT_KEPT_ALIVE */;
+      }
+      if (shapeFlag & 256 /* COMPONENT_SHOULD_KEEP_ALIVE */) {
+        shapeFlag -= 256 /* COMPONENT_SHOULD_KEEP_ALIVE */;
+      }
+      vnode.shapeFlag = shapeFlag;
+    }
+    function unmount(vnode) {
+      reset(vnode);
+      _unmount(vnode);
+    }
+    function pruneCacheEntry(key) {
+      keys.delete(key);
+      const cached = cache.get(key);
+      cached && unmount(cached);
+    }
+    let pendingCacheKey = null;
+    const instance = getCurrentInstance();
+    const cacheSubTree = () => {
+      cache.set(pendingCacheKey, instance.subTree);
+    };
+    const {
+      move,
+      createElement,
+      unmount: _unmount
+    } = instance.ctx.renderer;
+    instance.ctx.activate = function(vnode, container, anchor) {
+      move(vnode, container, anchor);
+    };
+    const storageContent = createElement("div");
+    instance.ctx.deactivate = function(vnode) {
+      move(vnode, storageContent, null);
+    };
+    onMounted(cacheSubTree);
+    onUpdated(cacheSubTree);
     return () => {
       const vnode = slots.default && slots.default();
       if (!vnode) return;
       const comp = vnode.type;
       const key = vnode.key ?? comp;
+      pendingCacheKey = key;
+      const cacheVnode = cache.get(key);
+      if (cacheVnode) {
+        vnode.component = cacheVnode.component;
+        vnode.shapeFlag |= 512 /* COMPONENT_KEPT_ALIVE */;
+        keys.delete(key);
+        keys.add(key);
+      } else {
+        keys.add(key);
+        if (max && keys.size > max) {
+          debugger;
+          pruneCacheEntry(keys.values().next().value);
+        }
+      }
+      vnode.shapeFlag |= 256 /* COMPONENT_SHOULD_KEEP_ALIVE */;
       return vnode;
     };
   }
@@ -1055,12 +1112,12 @@ function createRenderer(renderOptions) {
       }
     }
   };
-  const unmountChildren = (children) => {
+  const unmountChildren = (children, parentComponent) => {
     children.forEach((child) => {
-      unmount(child);
+      unmount(child, parentComponent);
     });
   };
-  const patchKeyedChildren = (prevChildren, nextChildren, container) => {
+  const patchKeyedChildren = (prevChildren, nextChildren, container, parentComponent) => {
     let i = 0;
     let e1 = prevChildren.length - 1;
     let e2 = nextChildren.length - 1;
@@ -1097,7 +1154,7 @@ function createRenderer(renderOptions) {
     } else if (i > e2) {
       if (i <= e1) {
         while (i <= e1) {
-          unmount(prevChildren[i]);
+          unmount(prevChildren[i], parentComponent);
           i++;
         }
       }
@@ -1115,7 +1172,7 @@ function createRenderer(renderOptions) {
         const prevVNode = prevChildren[i2];
         const newIndex = keyToNewIndexMap.get(prevVNode.key);
         if (newIndex === void 0) {
-          unmount(prevVNode);
+          unmount(prevVNode, parentComponent);
         } else {
           newIndexToOldMapIndex[newIndex - s2] = i2 + 1;
           patch(prevVNode, nextChildren[newIndex], container);
@@ -1143,7 +1200,7 @@ function createRenderer(renderOptions) {
     const nextShapeFlag = nextVNode.shapeFlag;
     if (nextShapeFlag & 8 /* TEXT_CHILDREN */) {
       if (prevShapeFlag & 16 /* ARRAY_CHILDREN */) {
-        unmountChildren(c1);
+        unmountChildren(c1, parentComponent);
       }
       if (c1 !== c2) {
         hostSetElementText(el, c2);
@@ -1157,7 +1214,7 @@ function createRenderer(renderOptions) {
             el
           );
         } else {
-          unmountChildren(c1);
+          unmountChildren(c1, parentComponent);
         }
       } else {
         if (prevShapeFlag & 8 /* TEXT_CHILDREN */) {
@@ -1286,11 +1343,10 @@ function createRenderer(renderOptions) {
       parentComponent
     );
     if (isKeepAlive(nextVNode.type)) {
-      debugger;
       instance.ctx.renderer = {
         createElement: hostCreateElement,
         // 内部需要创建一个div来缓存dom
-        move(vnode, container2) {
+        move(vnode, container2, anchor2) {
           hostInsert(vnode.component.subTree.el, container2);
         },
         unmount
@@ -1339,7 +1395,11 @@ function createRenderer(renderOptions) {
   };
   const processComponent = (prevVNode, nextVNode, container, anchor, parentComponent) => {
     if (!prevVNode) {
-      mountComponent(nextVNode, container, anchor, parentComponent);
+      if (nextVNode.shapeFlag & 512 /* COMPONENT_KEPT_ALIVE */) {
+        parentComponent.ctx.activate(nextVNode, container, anchor);
+      } else {
+        mountComponent(nextVNode, container, anchor, parentComponent);
+      }
     } else {
       updateComponent(prevVNode, nextVNode);
     }
@@ -1349,7 +1409,7 @@ function createRenderer(renderOptions) {
       return;
     }
     if (prevVNode && !isSameVNode(prevVNode, nextVNode)) {
-      unmount(prevVNode);
+      unmount(prevVNode, parentComponent);
       prevVNode = null;
     }
     const { type, shapeFlag, ref: ref2 } = nextVNode;
@@ -1415,16 +1475,20 @@ function createRenderer(renderOptions) {
       ref2.value = value;
     }
   };
-  const unmount = (vnode) => {
-    const preformRemove = () => hostRemove(vnode.el);
-    if (vnode.type === Fragment) {
-      unmountChildren(vnode.children);
+  const unmount = (vnode, parentComponent) => {
+    const preformRemove = () => {
+      hostRemove(vnode.el);
+    };
+    if (vnode.shapeFlag & 256 /* COMPONENT_SHOULD_KEEP_ALIVE */) {
+      parentComponent.ctx.deactivate(vnode);
+    } else if (vnode.type === Fragment) {
+      unmountChildren(vnode.children, parentComponent);
     } else if (vnode.shapeFlag & 6 /* COMPONENT */) {
       const um = vnode.component.um;
       if (um) {
         invokeArray(um);
       }
-      unmount(vnode.component.subTree);
+      unmount(vnode.component.subTree, parentComponent);
     } else if (vnode.shapeFlag & 64 /* TELEPORT */) {
       vnode.type.remove(vnode, unmountChildren);
     } else {

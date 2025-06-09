@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <h1>Ref</h1>
+        <div id="app"></div>
+
+        <script type="module">
+            import { ref, effect } from "../dist/reactivity.esm.js";
+
+            const app = document.getElementById("app");
+
+            const flag = ref(true);
+            const name = ref("name");
+            const age = ref(18);
+
+            console.log(flag);
+
+            effect(() => {
+                console.log("running");
+                // app.innerText = flag.value ? name.value : age.value;
+                app.textContent = age.value;
+            });
+
+            setTimeout(() => {
+                // flag.value = !flag.value;
+                // name.value = "name2";
+                age.value++;
+                age.value++;
+            }, 2000);
+        </script>
+    </body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <div id="app"></div>
+
+        <script type="module">
+            // 计算属性维护了一个dirty属性， 默认就是true，稍后运行国一次就会将dirty变为false
+            // 计算属性也是一个effect， 依赖的属性会收集这个计算属性，当前值变化后，会让computedEffect里面的dirty变为true
+            // 计算属性具备收集的能力， 可以收集对应的effect,依赖的值变化后会触发effect
+
+            import {
+                reactive,
+                computed,
+                effect,
+            } from "../dist/reactivity.esm.js";
+
+            const app = document.getElementById("app");
+
+            const state = reactive({
+                name: "zhangsan",
+                age: 18,
+            });
+
+            const fullName = computed(() => {
+                console.log("running");
+                return `${state.name} - ${state.age}`;
+            });
+
+            effect(() => {
+                app.innerText = fullName.value;
+            });
+
+            setTimeout(() => {
+                state.name = "ls";
+                state.age = 19;
+            }, 2000);
+        </script>
+    </body>
+</html>

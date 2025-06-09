@@ -8,18 +8,6 @@
     <body>
         <h1>Setup</h1>
         <div id="app"></div>
-        <style>
-            /* 下面我们会解释这些 class 是做什么的 */
-            .v-enter-active,
-            .v-leave-active {
-                transition: opacity 2s ease;
-            }
-
-            .v-enter-from,
-            .v-leave-to {
-                opacity: 0;
-            }
-        </style>
         <script type="module">
             import {
                 render,
@@ -78,9 +66,15 @@
                                 },
                                 "切换"
                             ),
-                            h(KeepAlive, {
-                                default: () => (flag.value ? h(A1) : h(B1)),
-                            }),
+                            h(
+                                KeepAlive,
+                                {
+                                    max: 1,
+                                },
+                                {
+                                    default: () => (flag.value ? h(A1) : h(B1)),
+                                }
+                            ),
                         ]);
                 },
             };

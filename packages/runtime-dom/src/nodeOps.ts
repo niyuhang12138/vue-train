@@ -1,42 +1,44 @@
-// 元素的增删改查，查找关系， 文本的增删改查
+// 主要是对节点的增删改查
 
-export const nodeOps = {
-    createElement(tagName: string): HTMLElement {
-        // 这里的tagName是小写的
-        const el = document.createElement(tagName);
-        return el;
+import { DomRenderOptions } from ".";
+
+const doc = document;
+
+export const nodeOps: Omit<DomRenderOptions, "patchProp"> = {
+    insert(child, parent, anchor = null) {
+        parent.insertBefore(child, anchor);
     },
-    // 移动性的操作
-    // A B C D -> A C D B
-    insert: (
-        child: HTMLElement,
-        parent: HTMLElement,
-        anchor?: HTMLElement | null
-    ) => {
-        parent.insertBefore(child, anchor || null); // anchor为null时，表示在parent的最后插入child
-    },
-    remove(child: HTMLElement) {
+    remove(child) {
         const parent = child.parentNode;
         if (parent) {
             parent.removeChild(child);
         }
     },
-    querySelector(selector: string): HTMLElement | null {
-        return document.querySelector(selector);
+    createElement(type) {
+        return doc.createElement(type as string);
     },
-    parentNode(node: Node): Node | null {
-        return node.parentNode;
+    createText(text) {
+        return doc.createTextNode(text);
     },
-    nextSibling(node: Node): Node | null {
-        return node.nextSibling;
+    createComment(common) {
+        return doc.createComment(common);
     },
-    setElementText(el: HTMLElement, text: string) {
+    setText(node, text) {
+        node.nodeValue = text;
+    },
+    setElementText(el, text) {
         el.textContent = text;
     },
-    createText(text: string): Text {
-        return document.createTextNode(text);
+    parentNode(node) {
+        return node.parentNode;
     },
-    setText(node: Text, text: string) {
-        node.nodeValue = text;
+    nextSibling(node) {
+        return node.nextSibling;
+    },
+    querySelector(selector) {
+        return doc.querySelector(selector);
+    },
+    cloneNode(node) {
+        return node.cloneNode(true);
     },
 };

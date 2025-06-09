@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <h1>Setup</h1>
+        <div id="app"></div>
+        <script type="module">
+            import {
+                render,
+                h,
+                Fragment,
+                Text,
+                ref,
+            } from "../dist/runtime-dom.esm.js";
+
+            const app = document.getElementById("app");
+
+            // setup 每个组件只会执行一次 可以放入我们我们compositionAPI
+            // 解决反复横条问题
+            // setup 可以返回一个函数 也可以返回一个对象
+
+            const VueComponent = {
+                setup(props, { emit, attrs, expose, slots }) {
+                    expose({
+                        a: 1,
+                    });
+
+                    return () => {
+                        return h(
+                            "button",
+                            {
+                                onClick: () => {
+                                    emit("MyEvent", "Hello from child");
+                                },
+                            },
+                            "点我"
+                        );
+                    };
+                },
+            };
+
+            render(
+                h(VueComponent, {
+                    onMyEvent: (msg) => {
+                        console.log("msg: ", msg);
+                    },
+                }),
+                app
+            );
+
+            setTimeout(() => {
+                render(null, app);
+            }, 2000);
+        </script>
+    </body>
+</html>

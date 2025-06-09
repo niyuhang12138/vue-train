@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <h1>Setup</h1>
+        <div id="app"></div>
+        <div id="teleport"></div>
+        <div id="teleport2"></div>
+        <script type="module">
+            import {
+                render,
+                h,
+                Fragment,
+                Text,
+                ref,
+                provide,
+                inject,
+                Teleport,
+            } from "../dist/runtime-dom.esm.js";
+
+            const app = document.getElementById("app");
+
+            const VueComponent = {
+                setup(props, { emit, attrs, expose, slots }) {
+                    return () => {
+                        return h("div", {}, "parent container");
+                    };
+                },
+            };
+
+            // 在父组件中提供数据 后代组件中获取数据
+            render(
+                h(Teleport, { to: "#teleport" }, [h(VueComponent), "123"]),
+                app
+            );
+
+            setTimeout(() => {
+                render(
+                    //   h(Teleport, { to: "#teleport2" }, [h(VueComponent), "456"]),
+                    null,
+                    app
+                );
+            }, 2000);
+        </script>
+    </body>
+</html>

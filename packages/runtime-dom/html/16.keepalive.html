@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <h1>Setup</h1>
+        <div id="app"></div>
+        <style>
+            /* 下面我们会解释这些 class 是做什么的 */
+            .v-enter-active,
+            .v-leave-active {
+                transition: opacity 2s ease;
+            }
+
+            .v-enter-from,
+            .v-leave-to {
+                opacity: 0;
+            }
+        </style>
+        <script type="module">
+            import {
+                render,
+                h,
+                Fragment,
+                Text,
+                ref,
+                provide,
+                inject,
+                Teleport,
+                Transition,
+                KeepAlive,
+                onMounted,
+            } from "../dist/runtime-dom.esm.js";
+
+            const app = document.getElementById("app");
+
+            // keepalive 缓存的是dom 不会重新渲染 而是复用dom元素
+
+            // 1.组件不会被重新创建，会将上次的结果拿出来返回
+            // 2.组件不会被卸载 而是将dom移除掉
+            // 3.内部需要缓存dom
+
+            const A1 = {
+                setup() {
+                    onMounted(() => {
+                        console.log("A1 mounted");
+                    });
+
+                    return () => h("input");
+                },
+            };
+
+            const B1 = {
+                setup() {
+                    onMounted(() => {
+                        console.log("B1 mounted");
+                    });
+
+                    return () => h("input");
+                },
+            };
+
+            const Com = {
+                setup() {
+                    const flag = ref(true);
+
+                    return () =>
+                        h(Fragment, [
+                            h(
+                                "button",
+                                {
+                                    onClick: () => {
+                                        flag.value = !flag.value;
+                                    },
+                                },
+                                "切换"
+                            ),
+                            h(KeepAlive, {
+                                default: () => (flag.value ? h(A1) : h(B1)),
+                            }),
+                        ]);
+                },
+            };
+
+            render(h(Com), app);
+        </script>
+    </body>
+</html>

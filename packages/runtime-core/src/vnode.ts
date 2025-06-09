@@ -1,56 +1,145 @@
-import { isString, ShapeFlags } from "@vue/shared";
+import {
+    extend,
+    isArray,
+    isFunction,
+    isObject,
+    isString,
+    ShapeFlags,
+} from "@vue/shared";
+import { Container, LifeCycle } from ".";
+import { Reactive, RefImpl } from "@vue/reactivity";
+import { isTeleport, Teleport, Transition } from "./components";
 
-export interface VNode {
-    __v_isVNode: boolean; // 标识是虚拟节点
-    type: string; // 节点类型
-    props: Record<string, any> | null; // 节点属性
-    children: any; // 子节点
-    shapeFlag: number; // 节点类型标识
-    key: string | number | null; // 唯一标识
-    el: any; // 真实节点
+export type ParentComponent = Instance;
+
+export interface Instance {
+    data?: Reactive<any>;
+    vNode: VNode;
+    subTree?: VNode;
+    isMounted: boolean;
+    update?: () => void;
+    props?: Record<string, any>;
+    attrs?: Record<string, any>;
+    slots?: Record<string, () => VNode>;
+    propOptions?: Record<string, any>;
+    proxy?: Instance;
+    render?: () => VNode;
+    next?: VNode;
+    setupState?: Record<string, any>;
+    exposed?: Record<string, any>;
+    [LifeCycle.BEFORE_MOUNT]?: Array<() => void>;
+    [LifeCycle.MOUNTED]?: Array<() => void>;
+    [LifeCycle.BEFORE_UPDATE]?: Array<() => void>;
+    [LifeCycle.UPDATED]?: Array<() => void>;
+    [LifeCycle.UNMOUNTED]?: Array<() => void>;
+    parent?: ParentComponent;
+    provides: object;
+    ctx: Record<string, any>;
 }
 
-export function isVNode(value: any): boolean {
-    return !!(value && value.__v_isVNode);
+export const Text = Symbol("text");
+export const Fragment = Symbol("fragment");
+
+export interface SetupContext {
+    emit: (event: string, ...args: any[]) => void;
+    attrs: Record<string, any>;
+    slots: Record<string, any>;
+    expose: (exposed: Record<string, any>) => void;
+}
+
+export interface Component extends Object {
+    data?: () => Record<string, any>;
+    render: () => VNode;
+    props?: Record<string, any>;
+    setup?: (
+        props: Record<string, any>,
+        context: SetupContext
+    ) => object | (() => VNode);
+}
+
+export type FunctionalComponent = (
+    props: Record<string, any>,
+    options: { slots: Record<string, () => VNode> }
+) => VNode;
+
+export type VNodeTypes =
+    | string
+    | typeof Text
+    | typeof Fragment
+    | Component
+    | FunctionalComponent
+    | Teleport;
+
+export type VNodeChildrenArrayType = Array<VNode | string | number>;
+export type VNodeChild = VNode | string | VNodeChildrenArrayType;
+
+export interface VNode {
+    __v_isVNode: true;
+    type: VNodeTypes;
+    props?: Record<string | symbol, any>;
+    children?:
+        | Array<VNode | string | number>
+        | string
+        | Record<string, () => VNode>;
+    key?: string;
+    shapeFlag: number;
+    el?: Container;
+    component?: Instance;
+    ref?: RefImpl;
+    target?: Container;
+    transition?: Transition;
+}
+
+export function createVNode(
+    type: VNodeTypes,
+    props?:
+        | VNode["props"]
+        | {
+              ref?: RefImpl;
+              key?: string;
+          },
+    children?: VNode["children"]
+) {
+    const shapeFlag = isString(type)
+        ? ShapeFlags.ELEMENT
+        : isTeleport(type)
+        ? ShapeFlags.TELEPORT
+        : isObject(type)
+        ? ShapeFlags.COMPONENT
+        : isFunction(type)
+        ? ShapeFlags.FUNCTIONAL_COMPONENT
+        : 0;
+    const vnode: VNode = {
+        __v_isVNode: true,
+        type,
+        props,
+        key: props?.key,
+        shapeFlag,
+    };
+
+    if (props?.ref) {
+        vnode.ref = props.ref;
+    }
+
+    if (children) {
+        if (isArray(children)) {
+            vnode.shapeFlag |= ShapeFlags.ARRAY_CHILDREN;
+        } else if (isObject(children)) {
+            vnode.shapeFlag |= ShapeFlags.SLOTS_CHILDREN; // 插槽
+        } else {
+            children = String(children);
+            vnode.shapeFlag |= ShapeFlags.TEXT_CHILDREN;
+        }
+        vnode.children = children;
+    }
+
+    return vnode;
+}
+
+export function isVNode(value: any): value is VNode {
+    return value ? value.__v_isVNode === true : false;
 }
 
 export function isSameVNode(n1: VNode, n2: VNode): boolean {
     return n1.type === n2.type && n1.key === n2.key;
-}
-
-export function createVNode(
-    type: string,
-    props = null,
-    children = null
-): VNode {
-    // 组件
-    // 元素
-    // 文本
-    // 自定义的keep-alive
-
-    // 用标识来区分 对应的虚拟节点类型， 这个表示采用的是位运算的方式 可以方便组合
-    const shapeFlag = isString(type) ? ShapeFlags.ELEMENT : 0;
-
-    // 虚拟节点要对应真实节点
-    const vnode: VNode = {
-        __v_isVNode: true, // 标识是虚拟节点
-        type,
-        props,
-        children,
-        shapeFlag, // 节点类型
-        key: props?.key,
-        el: null, // 真实节点
-    };
-
-    if (children) {
-        let type = 0;
-        if (Array.isArray(children)) {
-            type = ShapeFlags.ARRAY_CHILDREN; // 数组
-        } else {
-            type = ShapeFlags.TEXT_CHILDREN; // 文本
-        }
-        vnode.shapeFlag |= type;
-    }
-
-    return vnode;
 }

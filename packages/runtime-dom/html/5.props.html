@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script type="module">
+            import { render, h } from "../dist/runtime-dom.esm.js";
+
+            const app = document.getElementById("app");
+
+            // 属性 attrs（非响应式） + props（响应式）
+            // 所有属性 - propsOptions = attrs
+            const VueComponent = {
+                data() {
+                    return {
+                        name: "zs",
+                        age: 30,
+                    };
+                },
+                props: {
+                    a: null,
+                    c: null,
+                },
+                render(proxy) {
+                    console.log(this);
+                    return h(
+                        "div",
+                        {
+                            style: {
+                                color: "red",
+                            },
+                        },
+                        [
+                            h("h1", "Hello World"),
+                            h(
+                                "p",
+                                `a: ${proxy.a}, c: ${proxy.c}, b: ${proxy.$attrs.b}`
+                            ),
+                        ]
+                    );
+                },
+            };
+
+            // 组件两个虚拟节点组成 h(VueComponent) -> vnode 产生的是组件的虚拟节点
+            // render函数返回的虚拟节点 这个虚拟节点才是最终要渲染的内容 -> subTree
+
+            render(
+                h(VueComponent, {
+                    a: 1,
+                    b: "2",
+                    c: true,
+                }),
+                app
+            );
+        </script>
+    </body>
+</html>

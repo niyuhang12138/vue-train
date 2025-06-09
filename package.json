@@ -1,11 +1,14 @@
 {
     "name": "vue-train",
+    "private": true,
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
+    "type": "module",
     "scripts": {
-        "dev:reactive": "node scripts/dev.js reactivity -f esm",
-        "dev:runtime-dom": "node scripts/dev.js runtime-dom -f esm"
+        "dev:reactivity": "node scripts/dev.js reactivity -f esm",
+        "dev:runtime-dom": "node scripts/dev.js runtime-dom -f esm",
+        "dev:runtime-core": "node scripts/dev.js runtime-core -f esm"
     },
     "keywords": [],
     "author": "",

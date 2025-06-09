@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <h1>Diff</h1>
+        <div id="app"></div>
+        <script type="module">
+            import { render, h } from "../dist/runtime-dom.esm.js";
+
+            // 1.createRenderer我们可以自己创建渲染器
+            // 2.render用内置的渲染器来进行渲染(渲染dom元素)
+
+            // runtime-dom的作用就是提供DOM API（提供一系列的dom操作的api方法）
+            // @vue/runtime-dom -> @vue/runtime-core -> @vue/reactivity
+
+            const app = document.getElementById("app");
+
+            // 可能是一个(类型)
+            // 两个（类型，属性/儿子）
+            // 三个（类型，属性，儿子）
+            // 超过三个（类型，属性，...儿子）
+            // h(类型，属性，儿子)
+
+            // console.log(h("h1", "1"));
+            // console.log(h("h1", []));
+            // console.log(h("h1", h("span", "1")));
+            // console.log(h("h1", {}));
+            // console.log(h("h1", {}, "2"));
+            // console.log(h("h1", {}, "2", "2"));
+
+            let ele1 = h(
+                "h1",
+                {
+                    style: {
+                        color: "red",
+                    },
+                },
+                [
+                    h("div", { key: "a" }, "a"),
+                    h("div", { key: "b" }, "b"),
+                    h("div", { key: "c" }, "c"),
+                    h("div", { key: "d", style: { color: "pink" } }, "d"),
+                    h("div", { key: "e" }, "e"),
+                    h("div", { key: "f" }, "f"),
+                    h("div", { key: "g" }, "g"),
+                ]
+            );
+
+            const ele2 = h(
+                "h1",
+                {
+                    style: {
+                        color: "blue",
+                    },
+                },
+                [
+                    h("div", { key: "a" }, "a"),
+                    h("div", { key: "b" }, "b"),
+                    h("div", { key: "e" }, "e"),
+                    h("div", { key: "c" }, "c"),
+                    h("div", { key: "d", style: { color: "green" } }, "d"),
+                    h("div", { key: "h" }, "h"),
+                    h("div", { key: "f" }, "f"),
+                    h("div", { key: "g" }, "g"),
+                ]
+            );
+
+            render(ele1, app);
+
+            setTimeout(() => {
+                // render(null, app);
+                render(ele2, app);
+            }, 1000);
+        </script>
+    </body>
+</html>

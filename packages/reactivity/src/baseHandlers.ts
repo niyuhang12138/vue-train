@@ -1,15 +1,29 @@
-import { reactive, ReactiveFlags } from "./reactive";
-import { activeEffect, track, trigger } from "./effect";
+import { reactive, reactiveMap, Target, toRaw } from "./reactive";
+import { activeEffect } from "./effect";
+import { track, trigger } from "./reactiveEffect";
 import { isObject } from "@vue/shared";
+import { isRef, RefImpl } from "./ref";
+import { ReactiveFlags } from "./constants";
 
 export const mutableHandlers = {
     // 用户取值操作
-    get(target, key, receiver) {
+    get(target: Target, key: string | symbol, receiver: unknown) {
+        // 判断是否是代理对象
         if (key === ReactiveFlags.IS_REACTIVE) {
             return true;
+        } else if (key === ReactiveFlags.RAW) {
+            return target;
         }
-        track(target, key); // 依赖收集
+
+        // 依赖收集
+        track(target, key);
+
+        // 取值操作
         let r = Reflect.get(target, key, receiver);
+
+        if (isRef(r)) {
+            return r.value;
+        }
 
         if (isObject(r)) {
             // 如果是对象， 继续代理
@@ -19,18 +33,22 @@ export const mutableHandlers = {
         return r;
     },
     // 用户设置值操作
-    set(target, key, value, receiver) {
+    set(
+        target: Target,
+        key: string | symbol,
+        value: unknown,
+        receiver: unknown
+    ) {
         let oldValue = target[key]; // 取旧值
 
         // Reflect.set: bool
-        let r = Reflect.set(target, key, value, receiver);
+        let result = Reflect.set(target, key, value, receiver);
 
         if (oldValue !== value) {
-            // 说明值发生了变化
-            // 触发更新操作
+            // 触发更新
             trigger(target, key, value, oldValue);
         }
 
-        return r;
+        return result;
     },
 };

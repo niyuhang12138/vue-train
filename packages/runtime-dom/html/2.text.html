@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script type="module">
+            import { render, h, Text } from "../dist/runtime-dom.esm.js";
+
+            const app = document.getElementById("app");
+
+            render(h(Text, "Hello World"), app);
+
+            setTimeout(() => {
+                // render(h(Text, "Hello Vue"), app);
+                render(null, app);
+            }, 2000);
+        </script>
+    </body>
+</html>

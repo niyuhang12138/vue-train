@@ -1,91 +1,108 @@
-import { isObject } from "@vue/shared";
-import { reactive } from "./reactive";
-import {
-    activeEffect,
-    ReactiveEffect,
-    trackEffect,
-    trigger,
-    triggerEffect,
-} from "./effect";
+import { Target, toReactive } from "./reactive";
+import { activeEffect, ReactiveEffect } from "./effect";
+import { createDep, Dep, trackEffect, triggerEffect } from "./reactiveEffect";
+import { ComputedRefImpl } from "./computed";
+import { ReactiveFlags } from "./constants";
 
-function toReactive(value) {
-    return isObject(value) ? reactive(value) : value;
+export function ref(value: unknown) {
+    return createRef(value);
+}
+
+function createRef(value: unknown) {
+    return new RefImpl(value);
 }
 
 export class RefImpl {
-    public deps: Set<ReactiveEffect> | undefined = undefined;
-
-    public _value;
-    public __v_isRef = true;
-    constructor(public rawValue) {
-        this._value = toReactive(rawValue);
+    public [ReactiveFlags.IS_REF] = true;
+    public _value: unknown; // 用来保存ref的值
+    public dep: Dep;
+    constructor(public rawValue: unknown) {
+        this._value = toReactive(rawValue); // 如果传递的原始值是对象，则转换为响应式对象
     }
 
     get value() {
         // 依赖收集
-        if (activeEffect) {
-            trackEffect(this.deps || (this.deps = new Set()));
-        }
+        trackRefValue(this);
+
         return this._value;
     }
 
     set value(newValue) {
         if (newValue !== this.rawValue) {
-            this._value = toReactive(newValue);
+            this._value = newValue;
             this.rawValue = newValue;
             // 触发更新
-            triggerEffect(this.deps);
+            triggerRefValue(this);
         }
     }
 }
 
-export function ref(value) {
-    return new RefImpl(value);
+// 依赖收集
+export function trackRefValue(ref: RefImpl | ComputedRefImpl) {
+    if (!activeEffect) return;
+
+    let dep = ref.dep;
+
+    if (!dep) {
+        // 如果没有依赖关系， 则创建一个新的依赖关系
+        dep = ref.dep = createDep((key: any) => {
+            ref.dep = undefined;
+        }, "undefined");
+    }
+
+    trackEffect(activeEffect, dep);
+}
+
+// 触发更新
+export function triggerRefValue(ref: RefImpl | ComputedRefImpl) {
+    let dep = ref.dep;
+    if (!dep) return; // 没有依赖关系
+    triggerEffect(dep); // 触发更新
 }
 
 export class ObjectRefImpl {
-    public __v_isRef = true;
-
-    constructor(public _object, public _key) {}
+    public [ReactiveFlags.IS_REF] = true; // 标识是ref对象
+    constructor(public _object: Target, public _key: string | symbol) {}
 
     get value() {
         return this._object[this._key];
     }
 
-    set value(newValue) {
+    set value(newValue: unknown) {
         this._object[this._key] = newValue;
     }
 }
 
-export function toRef(target, key) {
+export function toRef(target: Target, key: string | symbol): ObjectRefImpl {
     return new ObjectRefImpl(target, key);
 }
 
-export function toRefs(object) {
+export function toRefs(object: Target): Record<string | symbol, ObjectRefImpl> {
     const ret = {};
-
     for (const key in object) {
         ret[key] = toRef(object, key);
     }
-
     return ret;
 }
 
-export function proxyRefs(objectWithRefs) {
-    return new Proxy(objectWithRefs, {
-        get(target, key, receiver) {
-            const res = Reflect.get(target, key, receiver);
-            return res.__v_isRef ? res.value : res;
+export function proxyRefs(objectWithRef) {
+    return new Proxy(objectWithRef, {
+        get(target: Target, key: string | symbol, receiver: unknown) {
+            const r = Reflect.get(target, key, receiver);
+            return r && isRef(r) ? r.value : r; // 如果是ref对象， 则返回值
         },
         set(target, key, value, receiver) {
-            const oldValue = target[key];
-            if (oldValue.__v_isRef) {
-                oldValue.value = value;
+            const r = Reflect.get(target, key, receiver);
+            if (r && isRef(r)) {
+                r.value = value; // 如果是ref对象， 则设置值
                 return true;
             } else {
-                // 这里会触发元对象的set方法
                 return Reflect.set(target, key, value, receiver);
             }
         },
     });
+}
+
+export function isRef(value: unknown): value is RefImpl {
+    return !!(value && value[ReactiveFlags.IS_REF]);
 }

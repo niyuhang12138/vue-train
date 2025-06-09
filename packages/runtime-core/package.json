@@ -12,6 +12,7 @@
         ]
     },
     "dependencies": {
-        "@vue/shared": "workspace:^1.0.0"
+        "@vue/reactivity": "workspace:*",
+        "@vue/shared": "workspace:*"
     }
 }

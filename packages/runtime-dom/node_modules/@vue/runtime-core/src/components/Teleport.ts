@@ -1,6 +1,6 @@
 import { ShapeFlags } from "@vue/shared";
-import { Container } from "./renderer";
-import { ParentComponent, VNode, VNodeChildrenArrayType } from "./vnode";
+import { Container } from "../renderer";
+import { ParentComponent, VNode, VNodeChildrenArrayType } from "../vnode";
 
 export const Teleport = {
     __isTeleport: true,

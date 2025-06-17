@@ -56,10 +56,12 @@ export function cleanDepEffect(dep: Dep, effect: ReactiveEffect) {
 
 export function trackEffect(effect: ReactiveEffect, dep: Dep) {
     // 需要重新的去收集，将不需要的移除掉
+    // 这里判断trackId是因为如果一个effect中触发了同一个的属性的多次依赖收集在这里只收集一次
     if (dep.get(effect) !== effect._trackId) {
         // 说明是新的依赖关系
         dep.set(effect, effect._trackId); // 记录当前的依赖关系
 
+        // 如果之前有依赖关系，则需要清理掉之前的依赖关系
         let oldDep = effect.deps[effect._depLength];
         // 如果老的依赖关系和新的依赖关系不一样，说明是新的依赖关系，那就清理掉老的依赖关系
         if (oldDep !== dep) {

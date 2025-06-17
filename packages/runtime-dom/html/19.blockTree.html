@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <h1>blockTree</h1>
+        <div id="app"></div>
+        <script type="module">
+            import {
+                createElementVNode as _createElementVNode,
+                toDisplayString as _toDisplayString,
+                openBlock as _openBlock,
+                createElementBlock as _createElementBlock,
+                h,
+                ref,
+                render,
+            } from "../dist/runtime-dom.esm.js";
+
+            const app = document.getElementById("app");
+
+            const Comp = {
+                setup() {
+                    const age = ref(18);
+                    const flag = ref(false);
+
+                    setTimeout(() => {
+                        age.value++;
+                    }, 1000);
+                    return {
+                        age,
+                    };
+                },
+                render(_ctx, _cache, $props, $setup, $data, $options) {
+                    const vnode =
+                        (_openBlock(),
+                        _createElementBlock("div", null, [
+                            _createElementVNode(
+                                "button",
+                                {
+                                    onClick: () => (_ctx.flag = !_ctx.flag),
+                                },
+                                "切换",
+                                8 /* PROPS */,
+                                ["onClick"]
+                            ),
+                            _ctx.flag
+                                ? (_openBlock(),
+                                  _createElementBlock("div", { key: 0 }, [
+                                      _createElementVNode(
+                                          "h1",
+                                          null,
+                                          "Hello World"
+                                      ),
+                                      _createElementVNode(
+                                          "span",
+                                          null,
+                                          _toDisplayString(_ctx.age),
+                                          1 /* TEXT */
+                                      ),
+                                  ]))
+                                : (_openBlock(),
+                                  _createElementBlock("div", { key: 1 }, [
+                                      _createElementVNode(
+                                          "h1",
+                                          null,
+                                          "Hello World"
+                                      ),
+                                      _createElementVNode(
+                                          "p",
+                                          null,
+                                          _toDisplayString(_ctx.age),
+                                          1 /* TEXT */
+                                      ),
+                                  ])),
+                        ]));
+                    console.log(vnode);
+                    return vnode;
+                },
+            };
+
+            render(h(Comp), app);
+        </script>
+    </body>
+</html>

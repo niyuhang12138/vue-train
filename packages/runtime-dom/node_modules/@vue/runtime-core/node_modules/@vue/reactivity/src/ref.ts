@@ -8,6 +8,11 @@ export function ref(value: unknown) {
     return createRef(value);
 }
 
+/**
+ * 创建Ref对象
+ * @param value
+ * @returns
+ */
 function createRef(value: unknown) {
     return new RefImpl(value);
 }
@@ -85,6 +90,12 @@ export function toRefs(object: Target): Record<string | symbol, ObjectRefImpl> {
     return ret;
 }
 
+/**
+ * proxyRefs 函数会返回一个代理对象， 这个对象是对原对象的一个代理， 通过这个代理对象可以访问原对象的属性
+ * 实际上如果读取的是一个Ref对象，则返回其value属性的值，如果读取的是一个普通对象或者Reactive，则返回其属性值
+ * @param objectWithRef
+ * @returns
+ */
 export function proxyRefs(objectWithRef) {
     return new Proxy(objectWithRef, {
         get(target: Target, key: string | symbol, receiver: unknown) {

@@ -88,6 +88,8 @@ export interface VNode {
     ref?: RefImpl;
     target?: Container;
     transition?: Transition;
+    patchFlag?: any;
+    dynamicChildren?: Array<any>;
 }
 
 export function createVNode(
@@ -98,7 +100,8 @@ export function createVNode(
               ref?: RefImpl;
               key?: string;
           },
-    children?: VNode["children"]
+    children?: VNode["children"],
+    patchFlag?: number
 ) {
     const shapeFlag = isString(type)
         ? ShapeFlags.ELEMENT
@@ -115,7 +118,12 @@ export function createVNode(
         props,
         key: props?.key,
         shapeFlag,
+        patchFlag,
     };
+
+    if (currentBlock && patchFlag > 0) {
+        currentBlock.push(vnode);
+    }
 
     if (props?.ref) {
         vnode.ref = props.ref;
@@ -143,3 +151,39 @@ export function isVNode(value: any): value is VNode {
 export function isSameVNode(n1: VNode, n2: VNode): boolean {
     return n1.type === n2.type && n1.key === n2.key;
 }
+
+let currentBlock = null;
+export function openBlock() {
+    currentBlock = [];
+}
+
+export function closeBlock() {
+    currentBlock = null;
+}
+
+export function setupBlock(vnode) {
+    vnode.dynamicChildren = currentBlock;
+    closeBlock();
+    return vnode;
+}
+
+export function createElementBlock(type, props, children, patchFlag?) {
+    const vnode = createVNode(type, props, children, patchFlag);
+    if (currentBlock) {
+        currentBlock.push(vnode);
+    }
+
+    return setupBlock(vnode);
+}
+
+export function toDisplayString(value: unknown): string {
+    return isString(value)
+        ? value
+        : value === null
+        ? ""
+        : value instanceof Object
+        ? JSON.stringify(value)
+        : String(value);
+}
+
+export { createVNode as createElementVNode };

@@ -4,12 +4,19 @@ import { cleanDepEffect, Dep } from "./reactiveEffect";
 
 export let activeEffect: ReactiveEffect | undefined = void 0; // 当前正在执行的effect
 
-// 每次收集依赖之前都要清理一下之前的依赖关系
+/**
+ * 重置依赖个数，等待依赖收集后再进行清理
+ * @param effect
+ */
 function preCleanEffect(effect: ReactiveEffect) {
     effect._depLength = 0; // 重置依赖关系的长度
     effect._trackId++; // 每次执行id+1, 如果当期同一个effect执行， id就是相同的
 }
 
+/**
+ * 清理多余的依赖关系
+ * @param effect
+ */
 function postCleanEffect(effect: ReactiveEffect) {
     if (effect.deps.length > effect._depLength) {
         for (let i = effect._depLength; i < effect.deps.length; i++) {
@@ -23,7 +30,7 @@ function postCleanEffect(effect: ReactiveEffect) {
 export class ReactiveEffect {
     public _trackId: number = 0; // 用于记录当前effect的执行次数
     public active = true; // 用于标识当前的effect是否处于激活状态
-    public _running = 0; // 用于标识当前的effect是否正在执行
+    public _running = 0; // 用于标识当前的effect是否正在执行 也就是说在effect中修改了值不会触发更新
     public _dirtyLevel = DirtyLevels.Dirty;
     public _depLength = 0; // 用于记录当前effect的依赖关系的长度
     public deps: Array<Dep> = [];
@@ -46,11 +53,11 @@ export class ReactiveEffect {
         if (!this.active) {
             return this.fn(); // 执行执行此函数
         }
-        // 其他情况下， 意味着是激活状态
+
+        // effect可以进行多层执行，所以需要判断当前的effect是否正在执行
         let lastEffect = activeEffect;
 
         try {
-            // 树的父子关系
             activeEffect = this; // 让当前的effect成为activeEffect
             // effect重新执行之前， 先清理一下之前的依赖关系
             preCleanEffect(this);

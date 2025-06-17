@@ -1,4 +1,4 @@
-import { hasOwn, isArray, isString, ShapeFlags } from "@vue/shared";
+import { hasOwn, isArray, isString, PatchFlags, ShapeFlags } from "@vue/shared";
 import {
     Component,
     Fragment,
@@ -391,6 +391,24 @@ export function createRenderer(renderOptions: RenderOptions) {
         }
     };
 
+    const patchBlockChildren = (
+        prevVNode: VNode,
+        nextVNode: VNode,
+        container: Container,
+        anchor?: Container,
+        parentComponent?: ParentComponent
+    ) => {
+        for (let i = 0; i < nextVNode.dynamicChildren!.length; i++) {
+            patch(
+                prevVNode.dynamicChildren[i],
+                nextVNode.dynamicChildren![i],
+                container,
+                anchor,
+                parentComponent
+            );
+        }
+    };
+
     /**
      * 更新元素
      * 比较元素的差异
@@ -411,8 +429,38 @@ export function createRenderer(renderOptions: RenderOptions) {
         const prevProps = prevVNode.props || {};
         const nextProps = nextVNode.props || {};
 
-        patchProps(prevProps, nextProps, el);
-        patchChildren(prevVNode, nextVNode, el, anchor, parentComponent);
+        const { patchFlag, dynamicChildren } = nextVNode;
+
+        if (patchFlag) {
+            if (patchFlag & PatchFlags.TEXT) {
+                debugger;
+                // 只要文本是动态的 只比较文本
+                hostSetElementText(el, nextVNode.children as string);
+            }
+
+            if (patchFlag & PatchFlags.CLASS) {
+                hostPatchProp(el, "class", prevProps.class, nextProps.class);
+            }
+
+            if (patchFlag & PatchFlags.STYLE) {
+                hostPatchProp(el, "style", prevProps.style, nextProps.style);
+            }
+        } else {
+            patchProps(prevProps, nextProps, el);
+        }
+
+        if (dynamicChildren) {
+            patchBlockChildren(
+                prevVNode,
+                nextVNode,
+                el,
+                anchor,
+                parentComponent
+            );
+        } else {
+            // 全量diff
+            patchChildren(prevVNode, nextVNode, el, anchor, parentComponent);
+        }
     };
 
     /**
@@ -797,7 +845,7 @@ export function createRenderer(renderOptions: RenderOptions) {
             const { el } = vnode;
             if (el) {
                 if (vnode.transition) {
-                    vnode.transition.leave(vnode.el, preformRemove);
+                    vnode.transition.leave(vnode.el as Element, preformRemove);
                 } else {
                     preformRemove();
                 }
@@ -818,7 +866,7 @@ export function createRenderer(renderOptions: RenderOptions) {
                 unmount(container._vnode);
             }
         } else {
-            // 将虚拟机电变成真实节点进行渲染
+            // 将虚拟节点变成真实节点进行渲染
             patch(container._vnode || null, vnode, container);
 
             // 记录当前容器的虚拟节点

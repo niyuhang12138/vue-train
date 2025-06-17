@@ -53,7 +53,7 @@ function doWatch(
         getter = () => source.value;
     } else if (isFunction(source)) {
         // 如果是函数， 那么直接使用这个函数
-        getter = source as Function;
+        getter = source;
     }
 
     let oldValue: undefined | Function;
